@@ -68,38 +68,6 @@ def instruction_modes(instruction):
     return unpacked_instruction
 
 
-def parameter_modes(this_instruction):
-    result = dict()
-    result['has_read_param'] = False
-    result['has_write_param'] = False
-    result['total_params'] = 0
-    opcode = this_instruction % 100
-    unpacked_instruction = instruction_modes(this_instruction)
-    print(str(unpacked_instruction))
-    parameter_ios = opcode_parameter_io(unpacked_instruction['opcode'])
-    print(str(parameter_ios))
-    parameter_number = opcode_parameter_number(unpacked_instruction['opcode'])
-
-    if parameter_number > 0:
-        result['param_1'] = (parameter_ios['p1_io'] + ' ' + str(unpacked_instruction['p1_mode']))
-        if parameter_number > 1:
-            result['param_2'] = (parameter_ios['p2_io'] + ' ' + str(unpacked_instruction['p2_mode']))
-            if parameter_number > 2:
-                result['param_3'] = (parameter_ios['p3_io'] + ' ' + str(unpacked_instruction['p3_mode']))
-
-    if opcode in (OC_ADD, OC_MULTIPLY, OC_LESS_THAN, OC_EQUALS):
-        result['has_read_param'] = True
-        result['has_write_param'] = True
-    elif opcode in (OC_JUMP_IF_TRUE, OC_JUMP_IF_FALSE):
-        result['has_read_param'] = True
-    elif opcode in (OC_OUTPUT, OC_ADJUST_REL_BASE):
-        result['has_read_param'] = True
-    elif opcode == OC_INPUT:
-        result['has_write_param'] = True
-
-    print(str(result))
-
-
 def opcode_parameter_io(opcode):
     parameter_io = dict()
     if opcode in (OC_ADD, OC_MULTIPLY, OC_LESS_THAN, OC_EQUALS):
@@ -141,7 +109,6 @@ def docker_intcode(memory_state_input, inputs, memory_pointer_start = 0, relativ
         instruction = memory_read(memory_pointer)
         params_and_opcode = instruction_modes(instruction)
         opcode = params_and_opcode['opcode']
-        #instruction_parameter_modes = parameter_modes(instruction)
         number_of_parameters = opcode_parameter_number(opcode)
         param_directions = opcode_parameter_io(opcode)
         write_address = None
@@ -282,22 +249,11 @@ def docker_intcode(memory_state_input, inputs, memory_pointer_start = 0, relativ
 def main():
     with open(SOURCE_FILE) as f:
         code = {key: (int(this_string)) for key, this_string in enumerate(f.readline().split(','))}
-    #print(str(code))
-
     inputs = dict()
-    inputs[0] = 1
+    inputs[0] = 2
     returned_state = docker_intcode(code, inputs)  #, suspend_on_output=True, return_state=True)
     print(str(returned_state))
 
 
 if __name__ == "__main__":
-    #parameter_modes(203)
-    #print()
-    #parameter_modes(204)
-    #print()
-    #parameter_modes(1102)
-    #print()
-    #parameter_modes(2202)
-    #print()
-    #parameter_modes(99)
     main()
