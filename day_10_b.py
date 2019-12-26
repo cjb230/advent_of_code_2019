@@ -1,3 +1,5 @@
+import math
+
 SOURCE_FILE = 'day_10_input.txt'
 
 
@@ -51,24 +53,28 @@ def reduce_vector(x_in, y_in):
 
 
 def vector_to_rotation_order(this_vector):
+    """Takes x,y ordinates in a list, with the y sign flipped, and returns theta from the origin, where +y = 0
+
+
+    """
     rotation_order = None
 
     if this_vector[0] == 0 and this_vector[1] == -1:  # up
         rotation_order = 0
     elif this_vector[0] == 1 and this_vector[1] == 0:  # right
-        rotation_order = 1
+        rotation_order = math.pi / 2
     elif this_vector[0] == 0 and this_vector[1] == 1:  # down
-        rotation_order = 2
+        rotation_order = math.pi
     elif this_vector[0] == -1 and this_vector[1] == 0:  # left
-        rotation_order = 3
+        rotation_order = 1.5 * math.pi
     elif this_vector[0] > 0 and this_vector[1] < 0:  # top right
-        rotation_order = -1 * (this_vector[0] / this_vector[1])
+        rotation_order = math.pi - math.atan2(this_vector[0], (this_vector[1]))
     elif this_vector[0] > 0 and this_vector[1] > 0:  # bottom right
-        rotation_order = 1 + (this_vector[1] / this_vector[0])
+        rotation_order = (math.pi / 2) + math.atan2(this_vector[1], this_vector[0])
     elif this_vector[0] < 0 and this_vector[1] > 0:  # bottom left
-        rotation_order = 2 + (-1 * (this_vector[0] / this_vector[1]))
+        rotation_order = math.pi - math.atan2(this_vector[0], this_vector[1])
     elif this_vector[0] < 0 and this_vector[1] < 0:  # top left
-        rotation_order = 3 + (this_vector[1] / this_vector[0])
+        rotation_order = (math.pi * 2.5 ) + math.atan2(this_vector[1], this_vector[0])
 
     return rotation_order
 
@@ -103,8 +109,7 @@ def main():
         #print(str(asteroid_vector_dict))
 
     print('Max visible = ' + str(len(asteroid_vector_dict)) + ', from ' + str(location_x) + ', ' + str(location_y))
-    #print(str(asteroid_vector_dict))
-
+    # print(str(asteroid_vector_dict))
 
     rotation_order_dict = dict()
     i = 0
@@ -120,6 +125,19 @@ def main():
         #print(str(final_multiples))
         rotation_order_dict[this_rotation_order] = final_multiples
 
+        asteroids_remaining = 0
+        for direction, asteroids_in_direction in rotation_order_dict.items():
+            asteroids_remaining += len(asteroids_in_direction)
+        # print('Round: ' + str(i) + ' Directions: ' + str(len(rotation_order_dict)) + ' Asteroids allocated = ' + str(asteroids_remaining))
+
+    print('i = ' + str(i))
+    asteroids_remaining = 0
+    for direction, asteroids_in_direction in rotation_order_dict.items():
+        asteroids_remaining += len(asteroids_in_direction)
+    print('Asteroids remaining = ' + str(asteroids_remaining))
+
+
+    #exit()
     #print(len(rotation_order_dict))
     #print(str(rotation_order_dict))
     #for direction in sorted(rotation_order_dict.items()):
@@ -127,27 +145,34 @@ def main():
 
     asteroids_destroyed = 0
     current_direction = 0
+    last_direction = 0
+    last_distance = 0
     while True:
-        # fire
-        print()
-        print('Asteroids destroyed = ' + str(asteroids_destroyed))
+        # status
+        # print()
+        # print('Asteroids destroyed = ' + str(asteroids_destroyed))
         asteroids_remaining = 0
         for direction, asteroids_in_direction in rotation_order_dict.items():
             asteroids_remaining += len(asteroids_in_direction)
-        print('Asteroids remaining = ' + str(asteroids_remaining))
-        print('Current direction = ' + str(current_direction))
-        print(str(rotation_order_dict[current_direction]))
+        # print('Asteroids remaining = ' + str(asteroids_remaining))
+        # print('Current direction = ' + str(current_direction))
+        # print(str(rotation_order_dict[current_direction]))
 
+        # fire
         asteroids_in_this_direction = rotation_order_dict[current_direction]
+        # save if this is the last one
+        if asteroids_destroyed == 199:
+            last_direction = current_direction
+            last_distance = min(asteroids_in_this_direction)
+            break
+
         if len(asteroids_in_this_direction) == 1:
             del rotation_order_dict[current_direction]
         else:
             asteroids_in_this_direction.pop(0)
-        print('Directions remaining = ' + str(len(rotation_order_dict)))
+        # print('Directions remaining = ' + str(len(rotation_order_dict)))
 
         asteroids_destroyed += 1
-        if asteroids_destroyed == 200:
-            break
 
         # rotate
         bigger_directions = [direction for direction in rotation_order_dict.keys() if direction > current_direction]
@@ -155,11 +180,43 @@ def main():
             bigger_directions = rotation_order_dict.keys()
         current_direction = min(bigger_directions)
 
-
+    print(last_direction)
+    print(math.tan(last_direction))
+    print(last_distance)
     #print(str(rotation_order_dict))
-    for direction in sorted(rotation_order_dict.items()):
-        print(str(direction))
+    #for direction in sorted(rotation_order_dict.items()):
+    #    print(str(direction))
 
 
 if __name__ == "__main__":
+    """print(vector_to_rotation_order([0, -1]))
+    print(vector_to_rotation_order([0.1,-5]))
+    print(vector_to_rotation_order([1,-1]))
+    print(vector_to_rotation_order([2,-1]))
+    print(vector_to_rotation_order([3,-0.5]))
+    print(vector_to_rotation_order([50, -0.1]))
+    print()
+    print(vector_to_rotation_order([1, 0]))
+    print(vector_to_rotation_order([3, 0.5]))
+    print(vector_to_rotation_order([2, 1]))
+    print(vector_to_rotation_order([1, 1]))
+    print(vector_to_rotation_order([0.1, 5]))
+    print(vector_to_rotation_order([0.1, 50]))
+
+    print()
+    print(vector_to_rotation_order([0, 1]))
+    print(vector_to_rotation_order([-0.1, 5]))
+    print(vector_to_rotation_order([-1, 1]))
+    print(vector_to_rotation_order([-2, 1]))
+    print(vector_to_rotation_order([-3, 0.5]))
+    print(vector_to_rotation_order([-50, 0.01]))
+
+    print()
+    print(vector_to_rotation_order([-1, 0]))
+    print(vector_to_rotation_order([-3, -0.5]))
+    print(vector_to_rotation_order([-2, -1]))
+    print(vector_to_rotation_order([-1, -1]))
+    print(vector_to_rotation_order([-0.1, -5]))
+    print(vector_to_rotation_order([-0.01, -50]))
+"""
     main()
