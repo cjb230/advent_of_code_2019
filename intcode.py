@@ -26,6 +26,7 @@ class IntcodeComputer:
         self.execution_counter = 0
         self.inputs_list = inputs_list
         self.outputs_list = list()
+        self.input_starved = False
 
     @staticmethod
     @functools.lru_cache(maxsize=None)
@@ -98,7 +99,6 @@ class IntcodeComputer:
             decoded_instruction["param_3_mode"] = parameter_mode_map % 10
         return decoded_instruction
 
-
     def _read_memory(self, location):
         if location < 0 or not isinstance(location, int):
             print('Location must be a positive integer')
@@ -109,8 +109,6 @@ class IntcodeComputer:
             self.memory[location] = 0
             ans = 0
         return ans
-
-
 
     def _decode_input(self, input_mode, input_value):
         """
@@ -143,9 +141,9 @@ class IntcodeComputer:
             print("Outputs can never be in immediate mode, and yet here we are.")
             exit()
         elif output_mode == IntcodeComputer.MODE_POSITION:
-            operation_output_address = self.memory[output_value]
+            operation_output_address = self._read_memory(output_value)
         elif output_mode == IntcodeComputer.MODE_RELATIVE:
-            operation_output_address = self.memory[self.relative_base + output_value]
+            operation_output_address = self._read_memory(output_value) + self.relative_base
         else:
             print("Couldn't decode output with mode = " + str(output_mode))
             exit()
@@ -229,6 +227,9 @@ class IntcodeComputer:
     def _process_instruction(self, instruction_address):
         self.execution_counter += 1
         instruction = self.memory[instruction_address]
+        #print(self.execution_counter, instruction_address, instruction)
+        #if self.execution_counter > 100:
+        #    exit()
         decoded_instruction_modes = self._decode_instruction_modes(instruction)
         decoded_params = self._decode_params(decoded_instruction_modes, instruction_address + 1)
         if decoded_instruction_modes["opcode"] == self.OP_ADD:
@@ -236,7 +237,11 @@ class IntcodeComputer:
         elif decoded_instruction_modes["opcode"] == self.OP_MULTIPLY:
             self._multiply(decoded_params["input_1"], decoded_params["input_2"], decoded_params["output_address"])
         elif decoded_instruction_modes["opcode"] == self.OP_INPUT:
-            self._input(self.inputs_list.pop(), decoded_params["output_address"])
+            if len(self.inputs_list) > 0:
+                self._input(self.inputs_list.pop(), decoded_params["output_address"])
+            else:
+                self.input_starved = True
+                self.execution_counter -= 1
         elif decoded_instruction_modes["opcode"] == self.OP_OUTPUT:
             self._output(decoded_params["input_1"])
         elif decoded_instruction_modes["opcode"] == self.OP_JUMP_IF_TRUE:
@@ -254,16 +259,21 @@ class IntcodeComputer:
         else:
             print('Unknown instruction ' + decoded_instruction_modes["opcode"] + ' in __process_instruction')
 
-    def run_to_halt(self, return_memory=False, return_output=False, print_output=False):
+    def run_to_halt(self, new_inputs=None, return_output=True, return_memory=False, print_output=False):
+        self.outputs_list = list()
+        if new_inputs:
+            self.inputs_list = new_inputs
+            self.input_starved = False
         if print_output:
             self.print_output = True
-        while not self.is_halted:
+        while not (self.is_halted or self.input_starved):
             self._process_instruction(self.next_instruction)
-        if return_memory and return_output:
-            return "Gotcha!"
-        elif return_memory:
-            return self.memory
-        elif return_output:
-            return self.outputs_list
+        results = dict()
+        if return_output:
+            results['output'] = self.outputs_list
+        if return_memory:
+            results['memory'] = self.memory
+        if len(results) > 0:
+            return results
         else:
             return
