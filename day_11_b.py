@@ -72,9 +72,6 @@ def main():
         current_heading = move_result['direction']
         loop += 1
 
-    print(panels_white)
-    print(len(panels_white))
-
     min_x = 100
     max_x = -100
     min_y = 100
@@ -95,9 +92,9 @@ def main():
 
     picture = list()
     for this_row in range(y_range + 1):
-        picture.append(['.' for x in range(x_range + 1)])
+        picture.append([' ' for x in range(x_range + 1)])
     for this_panel in panels_white:
-        #print(y_range + this_panel[1])
+
         picture[-1 * this_panel[1]][this_panel[0] - 1] = '#'
     for this_row in range(y_range + 1):
         str1 = ''
