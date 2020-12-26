@@ -16,7 +16,6 @@ class IntcodeComputer:
     MODE_RELATIVE = 2
 
     def __init__(self, program, inputs_list=None):
-        #_validate_memory_input(program)
         self.memory = program
         self.next_instruction = 0
         self.is_halted = False
@@ -227,9 +226,6 @@ class IntcodeComputer:
     def _process_instruction(self, instruction_address):
         self.execution_counter += 1
         instruction = self.memory[instruction_address]
-        #print(self.execution_counter, instruction_address, instruction)
-        #if self.execution_counter > 100:
-        #    exit()
         decoded_instruction_modes = self._decode_instruction_modes(instruction)
         decoded_params = self._decode_params(decoded_instruction_modes, instruction_address + 1)
         if decoded_instruction_modes["opcode"] == self.OP_ADD:
